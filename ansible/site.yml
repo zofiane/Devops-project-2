@@ -1,0 +1,9 @@
+- hosts: vm1
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - common
+    - jenkins
+    - npm
+    - mocha

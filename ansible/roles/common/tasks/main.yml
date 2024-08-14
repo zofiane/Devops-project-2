@@ -1,0 +1,4 @@
+- name: Update apt and upgrade system packages
+  apt:
+    update_cache: yes
+    upgrade: dist

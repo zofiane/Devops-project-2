@@ -1,0 +1,4 @@
+- name: Install Mocha globally using npm
+  npm:
+    name: mocha
+    global: yes
