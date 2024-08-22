@@ -1,0 +1,58 @@
+
+- name: Create Traefik directory
+  ansible.builtin.file:
+    path: /opt/traefik
+    state: directory
+    mode: '0755'
+
+- name: Copy Traefik configuration file
+  ansible.builtin.copy:
+    content: |
+      # Traefik Static Configuration
+      global:
+        checkNewVersion: true
+        sendAnonymousUsage: false
+
+      api:
+        insecure: true
+        dashboard: true
+
+      entryPoints:
+        web:
+          address: ":80"
+        websecure:
+          address: ":443"
+
+      providers:
+        docker:
+          endpoint: "unix:///var/run/docker.sock"
+          exposedByDefault: false
+
+      log:
+        level: INFO
+
+      accessLog: {}
+    dest: /opt/traefik/traefik.yml
+    mode: '0644'
+
+- name: Pull traefik Docker image
+  docker_image:
+    name: traefik
+    source: pull
+
+- name: Run Traefik container
+  docker_container:
+    name: traefik
+    image: traefik
+    state: started
+    ports:
+      - "8080:8080"
+      - "80:80"
+    volumes:
+      - "/opt/traefik/traefik.yml:/etc/traefik/traefik.yml"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+- name: Print Traefik URL
+  ansible.builtin.debug:
+    msg: "Traefik is available at http://{{ ansible_host }}:8080"
+    verbosity: 0

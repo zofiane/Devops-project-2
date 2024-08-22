@@ -1,0 +1,58 @@
+# - name: Ensure Docker is installed
+#   apt:
+#     name: docker.io
+#     state: present
+
+# - name: Start Docker service
+#   service:
+#     name: docker
+#     state: started
+#     enabled: true
+
+# - name: Pull HashiCorp Vault Docker image
+#   docker_image:
+#     name: vault
+#     source: pull
+
+# - name: Run HashiCorp Vault container
+#   docker_container:
+#     name: hashicorp_vault
+#     image: vault
+#     state: started
+#     ports:
+#       - "8200:8200"
+#     environment:
+#       VAULT_DEV_ROOT_TOKEN_ID: "root"
+#       VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+
+
+
+- name: Pull HashiCorp Vault Docker image
+  docker_image:
+    name: hashicorp/vault:latest
+    source: pull
+
+- name: Create Vault data directory
+  file:
+    path: /opt/vault/data
+    state: directory
+    mode: '0755'
+
+- name: Start HashiCorp Vault container
+  docker_container:
+    name: vault
+    image: hashicorp/vault:latest
+    state: started
+    restart_policy: always
+    ports:
+      - "8200:8200"
+    volumes:
+      - /opt/vault/data:/vault/data
+    env:
+      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_DEV_ROOT_TOKEN_ID: "myroot"
+
+- name: Print Vault URL
+  ansible.builtin.debug:
+    msg: "Vault is available at http://{{ ansible_host }}:8200"
+    verbosity: 0

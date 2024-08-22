@@ -1,0 +1,37 @@
+- name: Create directory for K6 scripts
+  file:
+    path: /opt/k6-scripts
+    state: directory
+    mode: '0755'
+
+- name: Create K6 test script
+  template:
+    src: nextjs_test.js.j2
+    dest: /opt/k6-scripts/nextjs_test.js
+    mode: '0644'
+
+- name: Pull K6 Docker image
+  docker_image:
+    name: loadimpact/k6
+    source: pull
+
+- name: Run K6 Docker container with test script
+  docker_container:
+    name: k6
+    image: grafana/k6
+    state: started
+    detach: yes
+    ports:
+      - "6565:6565"
+    volumes:
+      - "/opt/k6-scripts:/scripts"
+    command: >
+      sh -c "k6 run /scripts/nextjs_test.js && 
+      echo 'Test completed. Container will sleep for 1 hour.' && 
+      sleep 3600"
+
+
+- name: Print K6 URL
+  ansible.builtin.debug:
+    msg: "K6 is available at http://{{ ansible_host }}:6565"
+    verbosity: 0

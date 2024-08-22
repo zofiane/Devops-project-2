@@ -1,0 +1,4 @@
+---
+k6_vus: 10
+k6_duration: "30s"
+nextjs_url: "http://votre-site-nextjs.com"

@@ -1,0 +1,21 @@
+- hosts: devquality
+  become: yes
+  roles:
+  #  - common
+  #  - jenkins
+  #  - npm
+  #  - mocha
+  #  - sonarqube
+   - trivy
+   - owasp_zap
+  #  - Nexus
+  #  - hashicorp_vault 
+  #  - lighthouse
+  #  - K6
+  #  - kubernetes 
+  #  - argocd     
+  #  - Traefik    
+  #  - Nginx
+  #  - grafana      # à créer
+  #  - prometheus   # à créer   
+
