@@ -1,0 +1,25 @@
+# - name: Ensure Docker is installed
+#   apt:
+#     name: docker.io
+#     state: present
+
+# - name: Start Docker service
+#   service:
+#     name: docker
+#     state: started
+#     enabled: true
+
+
+- name: Pull SonarQube Docker image
+  docker_image:
+    name: sonarqube:lts-community
+    source: pull
+    docker_host: "unix:///var/run/docker.sock"
+
+- name: Run SonarQube container
+  docker_container:
+    name: sonarqube
+    image: sonarqube
+    state: started
+    ports:
+      - "9000:9000"

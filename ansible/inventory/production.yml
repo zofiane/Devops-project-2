@@ -1,0 +1,30 @@
+all:
+  children:
+    devquality:
+      hosts:
+        devquality_vm:
+          ansible_host: 195.15.241.58
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/netflix
+
+    SecOps:
+      hosts:
+        SecOps_vm:
+          ansible_host: 188.213.128.85
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/netflix
+
+    Orchestrator:
+      hosts:
+        Orchestrator_vm:
+          ansible_host: 195.15.241.137
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/netflix
+
+
+    WebMonitor:
+      hosts:
+        WebMonitor_vm:
+          ansible_host: 195.15.241.32
+          ansible_user: ubuntu
+          ansible_ssh_private_key_file: ~/.ssh/netflix

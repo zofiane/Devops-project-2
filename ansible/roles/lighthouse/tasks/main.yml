@@ -1,0 +1,11 @@
+- name: Install Node.js and NPM
+  apt:
+    name:
+      - nodejs
+      - npm
+    state: present
+
+- name: Install Lighthouse globally
+  npm:
+    name: lighthouse
+    global: yes

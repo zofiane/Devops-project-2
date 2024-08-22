@@ -1,9 +1,38 @@
-- hosts: vm1
+- hosts: devquality
   become: yes
-  vars_files:
-    - group_vars/all.yml
+  roles:
+    - common    # => ajouter node exporter
+    - jenkins   # ok
+    - npm       # ok
+    - mocha     # ok
+    - sonarqube # ok 
+    - trivy     # ok
+    - owasp_zap # ok   
+
+
+
+- hosts: SecOps
+  become: yes
   roles:
     - common
-    - jenkins
-    - npm
-    - mocha
+    - trivy     # ok
+    - owasp_zap # ok
+    - Nexus     # ok
+    - K6                # ok
+    - lighthouse        # ok
+    - hashicorp_vault   # ok
+
+- hosts: Orchestrator
+  become: yes
+  roles:
+    - common
+    - kubernetes  # à creer
+    # - argocd      # à installer manuellemet
+
+- hosts: WebMonitor
+  become: yes
+  roles:
+    - common
+    - Nginx    
+    - grafana      # à créer
+    - prometheus   # à créer

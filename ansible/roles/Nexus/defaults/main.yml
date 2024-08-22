@@ -1,0 +1,3 @@
+nexus_container_name: nexus
+nexus_image: sonatype/nexus3:latest
+nexus_port: 8081 

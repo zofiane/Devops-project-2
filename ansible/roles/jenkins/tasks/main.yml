@@ -1,25 +1,71 @@
-- name: Install Java (Jenkins requirement)
-  apt:
-    name: openjdk-11-jdk
-    state: present
 
-- name: Add Jenkins repository key
-  apt_key:
-    url: https://pkg.jenkins.io/debian/jenkins.io.key
-    state: present
 
-- name: Add Jenkins repository
-  apt_repository:
-    repo: deb http://pkg.jenkins.io/debian-stable binary/
-    state: present
+# - name: Create Docker keyring directory
+#   ansible.builtin.file:
+#     path: /etc/apt/keyrings
+#     state: directory
+#     mode: '0755'
+
+# - name: Migrate Docker GPG key
+#   ansible.builtin.shell: |
+#     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+#   args:
+#     creates: /etc/apt/keyrings/docker.gpg
+
+# - name: Add Jenkins GPG key
+#   ansible.builtin.apt_key:
+#     url: https://pkg.jenkins.io/debian-stable/jenkins.io.key
+#     state: present
+
+# - name: Add Jenkins repository
+#   ansible.builtin.apt_repository:
+#     repo: deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+#     state: present
+#     filename: jenkins
+
+
+- name: add jenkins key 
+  apt_key:  # ansible module to add key
+    url:  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    state: present 
+
+- name: add jenkins repo 
+  apt_repository: #ansible module to add repo 
+    repo: 'deb https://pkg.jenkins.io/debian-stable binary/'
+    state: present 
+
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
 
 - name: Install Jenkins
-  apt:
+  ansible.builtin.apt:
     name: jenkins
     state: present
 
 - name: Start Jenkins service
-  service:
+  ansible.builtin.systemd:
     name: jenkins
     state: started
-    enabled: true
+    enabled: yes
+
+- name: Wait for Jenkins to start up
+  ansible.builtin.wait_for:
+    port: 8080
+    delay: 10
+
+- name: Get Jenkins initial admin password
+  ansible.builtin.command: cat /var/lib/jenkins/secrets/initialAdminPassword
+  register: jenkins_password
+  changed_when: false
+
+- name: Display Jenkins initial admin password
+  ansible.builtin.debug:
+    var: jenkins_password.stdout
+    verbosity: 0
+
+- name: Print Jenkins URL
+  ansible.builtin.debug:
+    msg: "Jenkins is available at http://{{ ansible_host }}:8080"
+    verbosity: 0

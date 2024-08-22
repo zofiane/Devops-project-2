@@ -1,0 +1,41 @@
+- name: Download OWASP ZAP
+  get_url:
+    url: https://github.com/zaproxy/zaproxy/releases/download/v2.15.0/ZAP_2_15_0_unix.sh
+    dest: /tmp/ZAP_2_15_0_unix.sh
+    mode: '0755'
+
+- name: Run the OWASP ZAP installer
+  command: /tmp/ZAP_2_15_0_unix.sh -q -dir /opt/zap
+
+- name: Create a symlink for easy access
+  file:
+    src: /opt/zap/zap.sh
+    dest: /usr/local/bin/zap
+    state: link
+    mode: '0755'
+
+- name: Clean up installation files
+  file:
+    path: /tmp/ZAP_2_15_0_unix.sh
+    state: absent
+
+
+
+
+
+
+
+
+
+# - name: Pull OWASP ZAP Docker image
+#   docker_image:
+#     name: zaproxy/zap-stable
+#     source: pull
+
+# - name: Run OWASP ZAP container
+#   docker_container:
+#     name: owasp_zap
+#     image: zaproxy/zap-stable
+#     state: started
+#     ports:
+#       - "8090:8090"

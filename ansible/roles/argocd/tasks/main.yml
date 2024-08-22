@@ -1,0 +1,133 @@
+- name: Ensure Helm is installed
+  command: helm version
+  register: helm_installed
+  failed_when: helm_installed.rc != 0
+  changed_when: false
+  ignore_errors: yes
+
+- name: Install Helm if not present
+  shell: |
+    curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+  when: helm_installed.failed
+
+- name: Add Argo Helm repository
+  command: helm repo add "{{ argocd_helm_repo_name }}" "{{ argocd_helm_repo_url }}"
+  args:
+    creates: /etc/helm/repositories.yaml
+
+- name: Update Helm repositories
+  command: helm repo update
+
+- name: Create ArgoCD namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ argocd_namespace }}"
+    state: present
+  become: no
+
+
+# - name: Install ArgoCD using Helm
+#   command: >
+#     helm install {{ argocd_release_name }}
+#     {{ argocd_helm_repo_name }}/{{ argocd_chart_name }}
+#     --namespace {{ argocd_namespace }}
+#   become: yes  
+
+- name: Installer ArgoCD avec Helm
+  ansible.builtin.shell: |
+    export KUBECONFIG=/home/ubuntu/.kube/config
+    helm install {{ argocd_release_name }} {{ argocd_helm_repo_name }}/{{ argocd_chart_name }} --namespace {{ argocd_namespace }} --create-namespace
+  become: yes
+  environment:
+    KUBECONFIG: /home/ubuntu/.kube/config
+
+
+- name: Wait for ArgoCD server to be ready
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    namespace: "{{ argocd_namespace }}"
+    name: argocd-server
+  register: argocd_deployment
+  until: argocd_deployment.resources[0].status.readyReplicas == argocd_deployment.resources[0].status.replicas
+  retries: 10
+  delay: 30
+
+- name: Get ArgoCD admin password
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Secret
+    name: argocd-initial-admin-secret
+    namespace: "{{ argocd_namespace }}"
+  register: argocd_admin_secret
+
+- name: Decode and display ArgoCD admin password
+  debug:
+    msg: "ArgoCD admin password: {{ argocd_admin_secret.resources[0].data.password | b64decode }}"
+
+
+
+# - name: install pre-requisites
+#   pip:
+#     name:
+#       - openshift
+#       - pyyaml
+#       - kubernetes 
+
+
+# - name: Create ArgoCD namespace
+#   vars:
+#     ansible_python_interpreter: /usr/bin/python3
+#   kubernetes.core.k8s:
+#     api_version: v1
+#     kind: Namespace
+#     name: argocd
+#     kubeconfig: ~/.kube/config
+#     state: present
+#   become: no
+
+# - name: Apply ArgoCD installation manifest
+#   kubernetes.core.k8s:
+#     definition: "{{ lookup('url', 'https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml') | from_yaml_all | list }}"
+#     namespace: argocd
+#   become: yes
+
+# - name: Wait for ArgoCD server to be ready
+#   kubernetes.core.k8s:
+#     api_version: apps/v1
+#     kind: Deployment
+#     name: argocd-server
+#     namespace: argocd
+#   register: argocd_server
+#   until: argocd_server.status.availableReplicas is defined and argocd_server.status.availableReplicas > 0
+#   retries: 10
+#   delay: 30
+
+# - name: Get ArgoCD admin password
+#   kubernetes.core.k8s:
+#     api_version: v1
+#     kind: Secret
+#     name: argocd-initial-admin-secret
+#     namespace: argocd
+#   register: argocd_secret
+
+# - name: Display ArgoCD admin password
+#   debug:
+#     msg: "ArgoCD admin password: {{ argocd_secret.result.data.password | b64decode }}"
+
+# - name: Expose ArgoCD server (Optional - for testing)
+#   kubernetes.core.k8s:
+#     definition:
+#       apiVersion: v1
+#       kind: Service
+#       metadata:
+#         name: argocd-server-nodeport
+#         namespace: argocd
+#       spec:
+#         type: NodePort
+#         ports:
+#         - port: 80
+#           targetPort: 8080
+#         selector:
+#           app.kubernetes.io/name: argocd-server

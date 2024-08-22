@@ -1,0 +1,25 @@
+import http from 'k6/http';
+import { sleep, check } from 'k6';
+
+export const options = {
+  vus: {{ k6_vus | default(10) }},
+  duration: '{{ k6_duration | default("30s") }}',
+};
+
+export default function () {
+  const res = http.get('{{ nextjs_url }}');
+  check(res, {
+    'status is 200': (r) => r.status === 200,
+    'page contains React': (r) => r.body.includes('React'),
+  });
+
+  http.get('{{ nextjs_url }}/about');
+  http.get('{{ nextjs_url }}/products');
+
+  http.post('{{ nextjs_url }}/api/action', {
+    action: 'click',
+    element: 'button',
+  });
+
+  sleep(1);
+}
